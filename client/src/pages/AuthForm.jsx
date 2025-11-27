@@ -1,12 +1,12 @@
-// src/pages/AuthForm.jsx
+
 import React, { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import axiosInstance from "../utils/axiosInstance"; // use axios instance with interceptor
+import axiosInstance from "../utils/axiosInstance"; 
 import AuthContext from "../context/AuthContext";
 
 export default function AuthForm() {
   const navigate = useNavigate();
-  const { loginUser } = useContext(AuthContext); // use context to manage login
+  const { loginUser } = useContext(AuthContext);// use context to manage login
 
   const [isLogin, setIsLogin] = useState(true);
   const [fullname, setFullname] = useState("");
@@ -39,12 +39,12 @@ export default function AuthForm() {
 
         if (!token || !user) throw new Error("Invalid login response");
 
-        // Update AuthContext (handles localStorage internally)
+        
         loginUser(user, token);
 
         setMessage({ type: "success", text: "Login successful — redirecting..." });
 
-        // Navigate based on role
+     
         setTimeout(() => {
           switch (user.role) {
             case "admin":
@@ -59,7 +59,7 @@ export default function AuthForm() {
         }, 300);
 
       } else {
-        // REGISTER
+
         await axiosInstance.post("/auth/register", { fullname, email, password });
         setMessage({ type: "success", text: "Registration successful. Please login." });
         resetForm();

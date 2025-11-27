@@ -8,7 +8,7 @@ export default function AdminDashboard() {
   const { user, fetchUser, logoutUser } = useContext(AuthContext);
   const [activeFilter, setActiveFilter] = useState("all");
 
-  // Hardcoded temporary stats -> will be fetched from backend later
+
   const complaintStats = [
     { id: "total", label: "Total", count: 0, icon: FileText, bg: "bg-blue-600", iconBg: "bg-blue-700" },
     { id: "open", label: "Open", count: 0, icon: Clock, bg: "bg-blue-500", iconBg: "bg-blue-600" },
@@ -17,7 +17,7 @@ export default function AdminDashboard() {
     { id: "closed", label: "Closed", count: 0, icon: XCircle, bg: "bg-gray-600", iconBg: "bg-gray-700" },
   ];
 
-  // Fetch latest user info on mount
+
   useEffect(() => {
     const loadUser = async () => {
       await fetchUser();
@@ -25,7 +25,7 @@ export default function AdminDashboard() {
     loadUser();
   }, []);
 
-  // Redirect if not admin
+
   useEffect(() => {
     if (user && user.role !== "admin") {
       navigate("/");

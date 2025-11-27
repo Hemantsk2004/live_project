@@ -3,9 +3,8 @@ const express = require("express");
 const cors = require("cors");
 const connectDB = require("./config/db");
 
-const authRoutes = require("./routes/authRoutes");              // register, login, me
-const superAdminRoutes = require("./routes/superAdminRoutes");  // pending + approve
-
+const authRoutes = require("./routes/authRoutes");             
+const superAdminRoutes = require("./routes/superAdminRoutes");  
 const app = express();
 
 app.use(cors());

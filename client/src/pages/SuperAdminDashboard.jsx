@@ -6,14 +6,14 @@ export default function SuperAdminDashboard() {
   const { user, logoutUser, updateAuthToken } = useContext(AuthContext);
   const [pendingUsers, setPendingUsers] = useState([]);
 
-  // Fetch pending users (SUPERADMIN ROUTE)
+
   useEffect(() => {
     const fetchPending = async () => {
       try {
         const res = await axiosInstance.get(
           "/superadmin/pending-admin-requests"
         );
-        // backend returns { requests: [...] } or [...]
+  
         setPendingUsers(res.data.requests || res.data);
       } catch (err) {
         console.error(err);
@@ -35,12 +35,12 @@ export default function SuperAdminDashboard() {
 
       alert(res.data.message);
 
-      // ✅ Option B: Update token instantly if backend returns it
+   
       if (res.data.token && res.data.role) {
         updateAuthToken(res.data.token, res.data.role, res.data.fullname);
       }
 
-      // Refresh pending list
+ 
       const refreshed = await axiosInstance.get(
         "/superadmin/pending-admin-requests"
       );
