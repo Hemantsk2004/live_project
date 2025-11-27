@@ -3,31 +3,49 @@ import axiosInstance from "../utils/axiosInstance";
 import AuthContext from "../context/AuthContext";
 
 export default function SuperAdminDashboard() {
-  const { user, logoutUser } = useContext(AuthContext);
+  const { user, logoutUser, updateAuthToken } = useContext(AuthContext);
   const [pendingUsers, setPendingUsers] = useState([]);
 
+  // Fetch pending users (SUPERADMIN ROUTE)
   useEffect(() => {
-    // Define async function inside effect
-    const fetchPendingUsers = async () => {
+    const fetchPending = async () => {
       try {
-        const res = await axiosInstance.get("/auth/pending-admin-requests");
-        setPendingUsers(res.data); // Safe inside async function
+        const res = await axiosInstance.get(
+          "/superadmin/pending-admin-requests"
+        );
+        // backend returns { requests: [...] } or [...]
+        setPendingUsers(res.data.requests || res.data);
       } catch (err) {
         console.error(err);
-        alert(err.response?.data?.message || "Error fetching pending requests");
+        alert(
+          err.response?.data?.message || "Error fetching pending requests"
+        );
       }
     };
 
-    fetchPendingUsers(); // Call it immediately
-  }, []); // Run once on mount
+    fetchPending();
+  }, []);
 
+  // Approve admin
   const approveAdmin = async (userId) => {
     try {
-      const res = await axiosInstance.post(`/auth/approve-admin/${userId}`, {});
+      const res = await axiosInstance.post(
+        `/superadmin/approve-admin/${userId}`
+      );
+
       alert(res.data.message);
-      // Refresh list after approval
-      const refreshed = await axiosInstance.get("/auth/pending-admin-requests");
-      setPendingUsers(refreshed.data);
+
+      // ✅ Option B: Update token instantly if backend returns it
+      if (res.data.token && res.data.role) {
+        updateAuthToken(res.data.token, res.data.role, res.data.fullname);
+      }
+
+      // Refresh pending list
+      const refreshed = await axiosInstance.get(
+        "/superadmin/pending-admin-requests"
+      );
+      setPendingUsers(refreshed.data.requests || refreshed.data);
+
     } catch (err) {
       console.error(err);
       alert(err.response?.data?.message || "Error approving admin");
@@ -41,8 +59,12 @@ export default function SuperAdminDashboard() {
       <header className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-semibold text-gray-900">SuperAdmin Dashboard</h1>
-            <p className="text-sm text-gray-500 mt-0.5">Welcome, {user.fullname}</p>
+            <h1 className="text-xl font-semibold text-gray-900">
+              SuperAdmin Dashboard
+            </h1>
+            <p className="text-sm text-gray-500 mt-0.5">
+              Welcome, {user.fullname}
+            </p>
           </div>
 
           <button
@@ -56,10 +78,12 @@ export default function SuperAdminDashboard() {
 
       <main className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
         <section className="bg-white border border-gray-200 rounded-xl p-6 shadow-lg">
-          <h2 className="text-lg font-semibold text-gray-700 mb-4">Pending Admin Requests</h2>
+          <h2 className="text-lg font-semibold text-gray-700 mb-4">
+            Pending Admin Requests
+          </h2>
 
           {pendingUsers.length === 0 ? (
-            <p className="text-gray-500">No pending requests at the moment.</p>
+            <p className="text-gray-500">No pending requests.</p>
           ) : (
             <div className="space-y-3">
               {pendingUsers.map((pendingUser) => (
@@ -68,9 +92,14 @@ export default function SuperAdminDashboard() {
                   className="flex items-center justify-between p-3 border rounded-lg bg-gray-50"
                 >
                   <div>
-                    <p className="font-medium text-gray-800">{pendingUser.fullname}</p>
-                    <p className="text-sm text-gray-500">{pendingUser.email}</p>
+                    <p className="font-medium text-gray-800">
+                      {pendingUser.fullname}
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      {pendingUser.email}
+                    </p>
                   </div>
+
                   <button
                     className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
                     onClick={() => approveAdmin(pendingUser._id)}

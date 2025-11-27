@@ -7,7 +7,7 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Fetch current user on initial load
+  // Fetch user on load
   const fetchUser = async () => {
     const token = localStorage.getItem("token");
     if (!token) {
@@ -31,24 +31,53 @@ export const AuthProvider = ({ children }) => {
     fetchUser();
   }, []);
 
-  // Login user and update context
+  // Login user
   const loginUser = (userData, token) => {
     localStorage.setItem("token", token);
+    axiosInstance.defaults.headers.common["Authorization"] = `Bearer ${token}`;
     setUser(userData);
   };
 
   // Logout user
   const logoutUser = () => {
     localStorage.removeItem("token");
+    localStorage.removeItem("role");
+    localStorage.removeItem("fullname");
+    delete axiosInstance.defaults.headers.common["Authorization"];
     setUser(null);
   };
 
-  // Update user info in context (like after requesting admin)
-  const updateUserInfo = (data) => setUser((prev) => ({ ...prev, ...data }));
+  // Update token + info (OPTION B)
+  const updateAuthToken = (token, role, fullname) => {
+    localStorage.setItem("token", token);
+    localStorage.setItem("role", role);
+    localStorage.setItem("fullname", fullname);
+
+    axiosInstance.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+
+    setUser((prev) => ({
+      ...prev,
+      role,
+      fullname
+    }));
+  };
+
+  // Update selected fields
+  const updateUserInfo = (data) => {
+    setUser((prev) => ({ ...prev, ...data }));
+  };
 
   return (
     <AuthContext.Provider
-      value={{ user, loading, loginUser, logoutUser, updateUserInfo, fetchUser }}
+      value={{
+        user,
+        loading,
+        loginUser,
+        logoutUser,
+        fetchUser,
+        updateAuthToken,
+        updateUserInfo
+      }}
     >
       {children}
     </AuthContext.Provider>
