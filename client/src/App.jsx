@@ -5,6 +5,7 @@ import AuthForm from "./pages/AuthForm";
 import UserDashboard from "./pages/UserDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import SuperAdminDashboard from "./pages/SuperAdminDashboard";
+import ComplaintDetails from "./pages/ComplaintDetails";
 
 import AuthContext from "./context/AuthContext";
 
@@ -12,20 +13,21 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
   const { user, loading } = useContext(AuthContext);
 
   if (loading) return <p className="p-6">Loading...</p>;
-  if (!user) return <Navigate to="/" />; 
-  if (!allowedRoles.includes(user.role)) return <p className="p-6 text-red-600">Access Denied</p>;
+  if (!user) return <Navigate to="/" />;
+  if (!allowedRoles.includes(user.role))
+    return <p className="p-6 text-red-600">Access Denied</p>;
 
   return children;
 };
 
-function App() {
+export default function App() {
   return (
     <Router>
       <Routes>
-        {/* LOGIN PAGE */}
+        {/* AUTH */}
         <Route path="/" element={<AuthForm />} />
 
-        {/* USER DASHBOARD */}
+        {/* USER */}
         <Route
           path="/user"
           element={
@@ -35,7 +37,7 @@ function App() {
           }
         />
 
-        {/* ADMIN DASHBOARD */}
+        {/* ADMIN */}
         <Route
           path="/admin"
           element={
@@ -45,7 +47,7 @@ function App() {
           }
         />
 
-        {/* SUPERADMIN DASHBOARD */}
+        {/* SUPERADMIN */}
         <Route
           path="/superadmin"
           element={
@@ -54,9 +56,22 @@ function App() {
             </ProtectedRoute>
           }
         />
+
+        {/* COMPLAINT DETAILS */}
+        <Route
+          path="/complaints/:id"
+          element={
+            <ProtectedRoute allowedRoles={["user", "admin"]}>
+              <ComplaintDetails />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/complaints/:id"
+          element={<ComplaintDetails />}
+        />
       </Routes>
     </Router>
   );
 }
-
-export default App;
