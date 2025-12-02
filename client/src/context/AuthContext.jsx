@@ -7,20 +7,34 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Fetch user on load
+  /* ----------------------------------
+     FETCH USER ON APP LOAD / REFRESH
+  ---------------------------------- */
   const fetchUser = async () => {
     const token = localStorage.getItem("token");
+
     if (!token) {
       setLoading(false);
       return;
     }
 
+    // ✅ CRITICAL: attach token before calling /auth/me
+    axiosInstance.defaults.headers.common[
+      "Authorization"
+    ] = `Bearer ${token}`;
+
     try {
       const res = await axiosInstance.get("/auth/me");
-      setUser(res.data.user);
+
+      setUser({
+        ...res.data.user,
+        role: res.data.user.role?.toLowerCase(), // ✅ normalize role
+      });
     } catch (err) {
       console.error("Error fetching user:", err);
+
       localStorage.removeItem("token");
+      delete axiosInstance.defaults.headers.common["Authorization"];
       setUser(null);
     } finally {
       setLoading(false);
@@ -31,38 +45,51 @@ export const AuthProvider = ({ children }) => {
     fetchUser();
   }, []);
 
-  // Login user
+  /* ----------------------------------
+     LOGIN USER
+  ---------------------------------- */
   const loginUser = (userData, token) => {
     localStorage.setItem("token", token);
-    axiosInstance.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-    setUser(userData);
+
+    axiosInstance.defaults.headers.common[
+      "Authorization"
+    ] = `Bearer ${token}`;
+
+    setUser({
+      ...userData,
+      role: userData.role?.toLowerCase(),
+    });
   };
 
-  // Logout user
+  /* ----------------------------------
+     LOGOUT USER
+  ---------------------------------- */
   const logoutUser = () => {
     localStorage.removeItem("token");
-    localStorage.removeItem("role");
-    localStorage.removeItem("fullname");
     delete axiosInstance.defaults.headers.common["Authorization"];
     setUser(null);
   };
 
-  // Update token + info (OPTION B)
+  /* ----------------------------------
+     UPDATE TOKEN / ROLE (OPTIONAL)
+  ---------------------------------- */
   const updateAuthToken = (token, role, fullname) => {
     localStorage.setItem("token", token);
-    localStorage.setItem("role", role);
-    localStorage.setItem("fullname", fullname);
 
-    axiosInstance.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+    axiosInstance.defaults.headers.common[
+      "Authorization"
+    ] = `Bearer ${token}`;
 
     setUser((prev) => ({
       ...prev,
-      role,
-      fullname
+      role: role?.toLowerCase(),
+      fullname,
     }));
   };
 
-  // Update selected fields
+  /* ----------------------------------
+     UPDATE USER INFO (PROFILE ETC.)
+  ---------------------------------- */
   const updateUserInfo = (data) => {
     setUser((prev) => ({ ...prev, ...data }));
   };
@@ -76,7 +103,7 @@ export const AuthProvider = ({ children }) => {
         logoutUser,
         fetchUser,
         updateAuthToken,
-        updateUserInfo
+        updateUserInfo,
       }}
     >
       {children}

@@ -1,5 +1,4 @@
-// client/src/pages/UserDashboard.jsx
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useState, useMemo } from "react";
 import { FileText, User, Plus } from "lucide-react";
 import AuthContext from "../context/AuthContext";
 import axiosInstance from "../utils/axiosInstance";
@@ -11,7 +10,7 @@ export default function UserDashboard() {
   const [complaints, setComplaints] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // UI state for form
+  // UI state for new complaint form
   const [showForm, setShowForm] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -19,6 +18,7 @@ export default function UserDashboard() {
 
   const navigate = useNavigate();
 
+  // ✅ Fetch user complaints
   const fetchMyComplaints = async () => {
     try {
       const res = await axiosInstance.get("/complaints/my");
@@ -34,9 +34,19 @@ export default function UserDashboard() {
     fetchMyComplaints();
   }, []);
 
+  // ✅ Stats (like Akash UI but backend-driven)
+  const { total, active, resolved } = useMemo(() => {
+    const total = complaints.length;
+    const resolved = complaints.filter(
+      (c) => c.status?.toLowerCase() === "resolved"
+    ).length;
+    const active = total - resolved;
+    return { total, active, resolved };
+  }, [complaints]);
+
   if (!user) return <p className="p-6">Loading...</p>;
 
-  // ✅ Handle complaint submit
+  // ✅ Submit new complaint
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -54,7 +64,7 @@ export default function UserDashboard() {
       setDescription("");
       setShowForm(false);
 
-      // refresh list
+      // refresh complaints
       fetchMyComplaints();
     } catch (err) {
       console.error(err);
@@ -65,27 +75,33 @@ export default function UserDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 font-sans relative">
+    <div className="min-h-screen bg-gradient-to-br from-sky-200 via-white to-indigo-200 font-sans">
       {/* HEADER */}
-      <header className="bg-white border-b shadow-sm relative z-10">
+      <header className="bg-white/80 backdrop-blur-xl border-b shadow-sm">
         <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
           <div>
             <h1 className="text-xl font-semibold">User Dashboard</h1>
-            <p className="text-sm text-gray-500">Welcome, {user.fullname}</p>
+            <p className="text-sm text-gray-600">
+              Welcome back,{" "}
+              <span className="font-medium capitalize">
+                {user.fullname}
+              </span>
+            </p>
           </div>
 
           <div className="flex items-center gap-3">
             <button
               onClick={() => setShowForm((prev) => !prev)}
-              className="px-4 py-2 flex items-center text-sm font-semibold rounded bg-blue-600 text-white"
+              className="px-4 py-2 flex items-center text-sm font-semibold rounded bg-blue-600 text-white hover:bg-blue-700 transition"
             >
               <Plus className="w-4 h-4 mr-1" />
               {showForm ? "Close" : "New Complaint"}
             </button>
 
             <button
-              onClick={logoutUser}
+              onClick={() => navigate("/user/profile")}
               className="p-2 rounded-full hover:bg-gray-100"
+              title="Profile"
             >
               <User className="w-5 h-5" />
             </button>
@@ -95,9 +111,27 @@ export default function UserDashboard() {
 
       {/* MAIN */}
       <main className="max-w-7xl mx-auto p-6 space-y-6">
-        {/* ✅ INLINE COMPLAINT FORM */}
+        {/* ✅ STATS SECTION */}
+        <section className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="bg-white rounded-xl p-4 shadow">
+            <p className="text-xs text-gray-500">Total</p>
+            <p className="text-2xl font-bold text-gray-900">{total}</p>
+          </div>
+
+          <div className="bg-blue-50 rounded-xl p-4 shadow">
+            <p className="text-xs text-blue-600">Active</p>
+            <p className="text-2xl font-bold text-blue-700">{active}</p>
+          </div>
+
+          <div className="bg-green-50 rounded-xl p-4 shadow">
+            <p className="text-xs text-green-600">Resolved</p>
+            <p className="text-2xl font-bold text-green-700">{resolved}</p>
+          </div>
+        </section>
+
+        {/* ✅ NEW COMPLAINT FORM */}
         {showForm && (
-          <div className="bg-white border rounded shadow p-6">
+          <div className="bg-white border rounded-xl shadow p-6">
             <h2 className="text-lg font-semibold mb-4">New Complaint</h2>
 
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -112,7 +146,9 @@ export default function UserDashboard() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium">Description</label>
+                <label className="block text-sm font-medium">
+                  Description
+                </label>
                 <textarea
                   rows={4}
                   className="w-full border p-2 rounded mt-1"
@@ -123,6 +159,7 @@ export default function UserDashboard() {
               </div>
 
               <button
+                type="submit"
                 disabled={submitting}
                 className="bg-blue-600 text-white px-4 py-2 rounded text-sm disabled:opacity-60"
               >
@@ -132,7 +169,7 @@ export default function UserDashboard() {
           </div>
         )}
 
-        {/* COMPLAINT LIST */}
+        {/* ✅ COMPLAINT LIST */}
         <section>
           <h2 className="text-lg font-semibold mb-4">My Complaints</h2>
 
@@ -146,20 +183,23 @@ export default function UserDashboard() {
               </p>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="grid gap-4 md:grid-cols-2">
               {complaints.map((c) => (
                 <div
                   key={c._id}
                   onClick={() => navigate(`/complaints/${c._id}`)}
-                  className="bg-white p-4 rounded shadow border cursor-pointer hover:bg-gray-50"
+                  className="bg-white p-5 rounded-xl shadow cursor-pointer hover:shadow-md transition"
                 >
-                  <div className="flex justify-between">
-                    <h3 className="font-semibold">{c.title}</h3>
+                  <div className="flex justify-between items-start">
+                    <h3 className="font-semibold text-gray-900 line-clamp-2">
+                      {c.title}
+                    </h3>
                     <span className="text-xs px-2 py-1 rounded bg-blue-100 text-blue-700">
                       {c.status || "open"}
                     </span>
                   </div>
-                  <p className="text-sm text-gray-600 mt-1">
+
+                  <p className="text-sm text-gray-600 mt-2 line-clamp-3">
                     {c.description}
                   </p>
                 </div>
