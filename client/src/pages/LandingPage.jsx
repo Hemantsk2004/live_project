@@ -28,7 +28,7 @@ export default function LandingPage() {
     "Every complaint deserves a traceable outcome.",
     "Transparency must be structural, not optional.",
     "Authority flows from accountability.",
-    "Systems earn trust. Silence destroys it.",
+    "Systems earn trust through transparency. Silence destroys it.",
   ];
 
   const [index, setIndex] = React.useState(0);
@@ -44,7 +44,7 @@ export default function LandingPage() {
   return (
     <div className="relative min-h-screen bg-gradient-to-br from-sky-100 via-white to-indigo-200 overflow-hidden">
 
-      {/* Top navigation (auth entry) */}
+      {/* TOP NAVIGATION */}
       <header className="absolute top-0 left-0 right-0 z-20">
         <div className="max-w-7xl mx-auto px-6 py-5 flex justify-between items-center">
           <div className="flex items-center gap-3">
@@ -73,7 +73,7 @@ export default function LandingPage() {
         </div>
       </header>
 
-      {/* Ambient particles */}
+      {/* AMBIENT PARTICLES */}
       {[...Array(10)].map((_, i) => (
         <motion.div
           key={i}
@@ -98,9 +98,9 @@ export default function LandingPage() {
             transition={{ duration: 0.9 }}
             className="text-3xl sm:text-4xl lg:text-5xl font-extrabold leading-tight text-slate-900"
           >
-            A System Built for{" "}
+            A Transparent Complaint{" "}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-600 to-indigo-600">
-              Just Resolution
+              Resolution System
             </span>
           </motion.h1>
 
@@ -117,11 +117,12 @@ export default function LandingPage() {
             </motion.p>
           </AnimatePresence>
 
+          {/* FEATURE CHIPS */}
           <div className="flex flex-wrap gap-3 text-sm">
             {[
-              { icon: ShieldCheck, text: "Confidential reporting" },
-              { icon: Clock, text: "Governed escalation" },
-              { icon: CheckCircle2, text: "Auditable resolution" },
+              { icon: ShieldCheck, text: "Secure & confidential reporting" },
+              { icon: Clock, text: "Structured escalation workflow" },
+              { icon: CheckCircle2, text: "Fully auditable resolution trail" },
             ].map((item, i) => (
               <div
                 key={i}
@@ -135,29 +136,29 @@ export default function LandingPage() {
             ))}
           </div>
 
+          {/* ROLE EXPLANATION */}
           <div className="flex gap-3 flex-wrap text-xs">
             <span className="px-3 py-1 rounded-full bg-sky-50 border border-sky-100 text-sky-700">
-              Users → Raise & track issues
+              Users → Raise & track complaints
             </span>
             <span className="px-3 py-1 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-700">
-              Admins → Review & resolve
+              Admins → Review, update & resolve
             </span>
           </div>
 
-          <div className="flex gap-3 pt-4">
+          {/* CTA — ONLY ONE */}
+          <div className="pt-4">
             <button
               onClick={() => navigate("/register")}
               className="px-8 py-3 rounded-2xl bg-gradient-to-r from-sky-600 to-indigo-600 text-white font-semibold shadow-xl hover:-translate-y-1 transition"
             >
               Get Started
             </button>
-            <button
-              onClick={() => navigate("/login")}
-              className="px-8 py-3 rounded-2xl border border-slate-300 text-slate-700 font-semibold hover:bg-white transition"
-            >
-              Login
-            </button>
           </div>
+
+          <p className="text-sm text-slate-500">
+            Built for organizations, institutions, and communities that value accountability.
+          </p>
         </div>
 
         {/* RIGHT — ORBIT */}
@@ -178,7 +179,7 @@ export default function LandingPage() {
                 Raise → Route → Resolve
               </p>
               <p className="mt-1 text-xs text-slate-500">
-                Accountability by design
+                End-to-end accountability at every stage
               </p>
             </div>
 
@@ -200,8 +201,9 @@ export default function LandingPage() {
         </div>
       </div>
 
+      {/* FOOTER */}
       <footer className="pb-6 text-center text-xs text-slate-500">
-        © Complaint Matrix · Designed for clarity, fairness & trust
+        © Complaint Matrix · Designed for clarity, fairness, and institutional accountability
       </footer>
     </div>
   );

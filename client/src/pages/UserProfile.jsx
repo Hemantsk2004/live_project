@@ -1,5 +1,5 @@
 // client/src/pages/UserProfile.jsx
-import React from "react";
+import React, { useContext } from "react";
 import {
   LogOut,
   User,
@@ -9,7 +9,6 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import AuthContext from "../context/AuthContext";
-import { useContext } from "react";
 
 export default function UserProfile() {
   const { user, logoutUser } = useContext(AuthContext);
@@ -65,8 +64,11 @@ export default function UserProfile() {
               </div>
             </div>
 
+            {/* ✅ FINAL FIX HERE */}
             <button
-              onClick={() => navigate("/user")}
+              onClick={() =>
+                navigate("/user/dashboard", { replace: true })
+              }
               className="flex items-center gap-2 text-sm text-sky-600 hover:underline"
             >
               <LayoutDashboard size={16} />

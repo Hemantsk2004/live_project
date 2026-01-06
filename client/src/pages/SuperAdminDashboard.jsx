@@ -1,17 +1,23 @@
 import React, { useState, useEffect, useContext } from "react";
-import axiosInstance from "../utils/axiosInstance";
-import AuthContext from "../context/AuthContext";
 import {
+  LayoutDashboard,
   Shield,
   UserCheck,
   Mail,
   LogOut,
 } from "lucide-react";
+import axiosInstance from "../utils/axiosInstance";
+import AuthContext from "../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 export default function SuperAdminDashboard() {
-  const { user, logoutUser, updateAuthToken } = useContext(AuthContext);
+  const { user, logoutUser } = useContext(AuthContext);
   const [pendingUsers, setPendingUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
 
+  const navigate = useNavigate();
+
+  /* ================= FETCH REQUESTS ================= */
   useEffect(() => {
     const fetchPending = async () => {
       try {
@@ -24,128 +30,135 @@ export default function SuperAdminDashboard() {
         alert(
           err.response?.data?.message || "Failed to fetch pending requests"
         );
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchPending();
   }, []);
 
+  /* ================= APPROVE ================= */
   const approveAdmin = async (userId) => {
     try {
       const res = await axiosInstance.post(
         `/superadmin/approve-admin/${userId}`
       );
-
       alert(res.data.message);
-
-      if (res.data.token && res.data.role) {
-        updateAuthToken(res.data.token, res.data.role, res.data.fullname);
-      }
 
       const refreshed = await axiosInstance.get(
         "/superadmin/pending-admin-requests"
       );
       setPendingUsers(refreshed.data.requests || refreshed.data);
     } catch (err) {
-      console.error(err);
       alert(err.response?.data?.message || "Approval failed");
     }
   };
 
-  if (!user) {
-    return <p className="p-6 text-slate-500">Loading...</p>;
-  }
+  if (!user) return <p className="p-6">Loading...</p>;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sky-100 via-white to-indigo-100 font-sans">
-      {/* HEADER */}
-      <header className="bg-white/85 backdrop-blur-xl border-b border-white/70 shadow-sm">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <div className="h-11 w-11 rounded-2xl bg-gradient-to-br from-indigo-600 to-sky-600 text-white font-bold flex items-center justify-center shadow">
-              CMS
-            </div>
-            <div>
-              <h1 className="text-xl font-semibold text-slate-900">
-                SuperAdmin Console
-              </h1>
-              <p className="text-sm text-slate-500">
-                Governance & access control
-              </p>
-            </div>
-          </div>
+    <div className="min-h-screen flex bg-gradient-to-br from-sky-100 via-white to-indigo-100">
+      {/* ================= SIDEBAR ================= */}
+      <aside className="w-64 bg-white/80 backdrop-blur-xl border-r border-white/70 shadow-sm hidden md:flex flex-col">
+        <div className="px-6 py-5 border-b border-white/70">
+          <h2 className="text-lg font-bold text-slate-900">CMS</h2>
+          <p className="text-xs text-slate-500 mt-1">SuperAdmin Panel</p>
+        </div>
 
+        <nav className="flex-1 px-4 py-6 space-y-1">
+          <button className="w-full flex items-center gap-3 px-3 py-2 rounded-xl bg-sky-50 text-sky-700 font-medium">
+            <LayoutDashboard size={18} />
+            Dashboard
+          </button>
+        </nav>
+
+        <div className="px-4 py-4 border-t border-white/70">
           <button
             onClick={logoutUser}
-            className="flex items-center gap-1 text-sm text-rose-600 hover:underline"
+            className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-sm text-rose-600 hover:bg-rose-50"
           >
-            <LogOut size={14} />
+            <LogOut size={16} />
             Logout
           </button>
         </div>
-      </header>
+      </aside>
 
-      {/* MAIN */}
-      <main className="max-w-6xl mx-auto p-6 space-y-6">
-        {/* CONTEXT CARD */}
-        <section className="bg-white/95 border border-white/80 rounded-2xl shadow-lg p-5 flex items-center gap-4">
+      {/* ================= MAIN ================= */}
+      <main className="flex-1 p-8 space-y-8 overflow-y-auto">
+        {/* HEADER */}
+        <div>
+          <h1 className="text-2xl font-semibold text-slate-900">
+            SuperAdmin Console
+          </h1>
+          <p className="text-sm text-slate-600">
+            Approve administrators and oversee system governance
+          </p>
+        </div>
+
+        {/* ROLE CONTEXT */}
+        <div className="bg-white/90 rounded-2xl border border-white/80 shadow-lg p-6 flex items-start gap-4">
           <div className="p-3 rounded-xl bg-indigo-50 border border-indigo-100">
             <Shield className="w-6 h-6 text-indigo-600" />
           </div>
           <div>
-            <p className="text-sm font-semibold text-slate-900">
+            <h2 className="font-semibold text-slate-900">
               Elevated Authority Mode
-            </p>
-            <p className="text-xs text-slate-600">
-              You are approving administrative access across the system.
+            </h2>
+            <p className="text-sm text-slate-600">
+              You control administrative access and system-level governance.
             </p>
           </div>
-        </section>
+        </div>
 
-        {/* PENDING ADMINS */}
-        <section className="bg-white/95 border border-white/80 rounded-2xl shadow-lg p-6">
-          <h2 className="text-lg font-semibold text-slate-800 mb-4">
+        {/* REQUESTS */}
+        <div className="bg-white/95 rounded-2xl border border-white/80 shadow p-6">
+          <h3 className="text-lg font-semibold text-slate-900 flex items-center gap-2 mb-4">
+            <UserCheck size={18} />
             Pending Admin Requests
-          </h2>
+          </h3>
 
-          {pendingUsers.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 text-slate-500 text-sm">
-              <UserCheck className="w-10 h-10 mb-2 text-slate-300" />
+          {loading ? (
+            <p className="text-sm text-slate-500">Loading requests…</p>
+          ) : pendingUsers.length === 0 ? (
+            <div className="text-center py-10 text-slate-500">
+              <UserCheck className="mx-auto mb-2" />
               No pending admin approvals.
             </div>
           ) : (
-            <div className="space-y-3">
-              {pendingUsers.map((pendingUser) => (
+            <div className="space-y-4">
+              {pendingUsers.map((u) => (
                 <div
-                  key={pendingUser._id}
-                  className="flex items-center justify-between gap-4 p-4 rounded-xl bg-slate-50 border border-slate-200 hover:shadow transition"
+                  key={u._id}
+                  className="flex items-center justify-between gap-4 bg-white rounded-xl border border-slate-200 p-4"
                 >
                   <div className="flex items-start gap-3">
-                    <div className="h-10 w-10 rounded-full bg-gradient-to-br from-sky-500 to-indigo-500 text-white flex items-center justify-center font-semibold">
-                      {pendingUser.fullname?.[0] || "A"}
+                    <div className="h-10 w-10 rounded-full bg-indigo-600 text-white flex items-center justify-center font-semibold">
+                      {u.fullname?.[0] || "U"}
                     </div>
+
                     <div>
                       <p className="font-medium text-slate-900">
-                        {pendingUser.fullname}
+                        {u.fullname}
                       </p>
                       <p className="text-xs text-slate-500 flex items-center gap-1">
-                        <Mail className="w-3.5 h-3.5" />
-                        {pendingUser.email}
+                        <Mail size={12} />
+                        {u.email}
                       </p>
                     </div>
                   </div>
 
                   <button
-                    onClick={() => approveAdmin(pendingUser._id)}
-                    className="px-4 py-2 text-sm rounded-xl bg-emerald-600 text-white font-medium hover:bg-emerald-700 transition"
+                    onClick={() => approveAdmin(u._id)}
+                    className="px-4 py-2 text-sm rounded-xl bg-emerald-600 text-white font-semibold hover:bg-emerald-700"
                   >
-                    Approve Admin
+                    Approve
                   </button>
                 </div>
               ))}
             </div>
           )}
-        </section>
+        </div>
       </main>
     </div>
   );

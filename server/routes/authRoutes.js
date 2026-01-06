@@ -120,5 +120,4 @@ router.get("/me", verifyToken, async (req, res) => {
   }
 });
 
-
 module.exports = router;

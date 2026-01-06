@@ -1,37 +1,51 @@
 // server/routes/complaintRoutes.js
 const express = require("express");
-const router = express.Router(); // ✅ THIS WAS MISSING
+const router = express.Router();
 const Complaint = require("../models/Complaint");
 const upload = require("../middleware/upload");
 const { verifyToken, verifyAdmin } = require("../middleware/authMiddleware");
 
 // ===============================
-// USER → CREATE COMPLAINT
+// USER → CREATE COMPLAINT (WITH / WITHOUT ATTACHMENTS)
 // ===============================
-router.post("/", verifyToken, async (req, res) => {
-  try {
-    const complaint = await Complaint.create({
-      title: req.body.title,
-      description: req.body.description,
-      user: req.user.id,
-      status: "open",
-    });
+router.post(
+  "/",
+  verifyToken,
+  upload.array("attachments", 5),
+  async (req, res) => {
+    try {
+      const attachments = req.files
+        ? req.files.map((file) => ({
+            filename: file.originalname,
+            path: file.path,
+            mimetype: file.mimetype,
+          }))
+        : [];
 
-    res.status(201).json(complaint);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Failed to create complaint" });
+      const complaint = await Complaint.create({
+        title: req.body.title,
+        description: req.body.description,
+        user: req.user.id,
+        status: "open",
+        attachments,
+      });
+
+      res.status(201).json(complaint);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: "Failed to create complaint" });
+    }
   }
-});
+);
 
 // ===============================
 // USER → GET OWN COMPLAINTS
 // ===============================
 router.get("/my", verifyToken, async (req, res) => {
   try {
-    const complaints = await Complaint.find({ user: req.user.id })
-      .sort({ createdAt: -1 });
-
+    const complaints = await Complaint.find({ user: req.user.id }).sort({
+      createdAt: -1,
+    });
     res.json(complaints);
   } catch (err) {
     res.status(500).json({ message: "Failed to fetch complaints" });
@@ -54,7 +68,7 @@ router.get("/", verifyToken, verifyAdmin, async (req, res) => {
 });
 
 // ===============================
-// ADMIN → UPDATE STATUS ✅
+// ADMIN → UPDATE COMPLAINT STATUS
 // ===============================
 router.patch("/:id/status", verifyToken, verifyAdmin, async (req, res) => {
   try {
@@ -87,14 +101,16 @@ router.patch("/:id/status", verifyToken, verifyAdmin, async (req, res) => {
 // ===============================
 router.get("/:id", verifyToken, async (req, res) => {
   try {
-    const complaint = await Complaint.findById(req.params.id)
-      .populate("user", "fullname email");
+    const complaint = await Complaint.findById(req.params.id).populate(
+      "user",
+      "fullname email"
+    );
 
     if (!complaint) {
       return res.status(404).json({ message: "Complaint not found" });
     }
 
-    // ✅ User can see only own complaint
+    // User can see only their own complaints
     if (
       req.user.role === "user" &&
       complaint.user._id.toString() !== req.user.id
@@ -109,11 +125,15 @@ router.get("/:id", verifyToken, async (req, res) => {
   }
 });
 
+// ===============================
+// USER / ADMIN → ADD COMMENT
+// ===============================
 router.post("/:id/comment", verifyToken, async (req, res) => {
   try {
     const complaint = await Complaint.findById(req.params.id);
-    if (!complaint)
+    if (!complaint) {
       return res.status(404).json({ message: "Complaint not found" });
+    }
 
     complaint.comments.push({
       senderRole: req.user.role,
@@ -126,32 +146,5 @@ router.post("/:id/comment", verifyToken, async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
-
-// USER → create complaint with attachments
-router.post(
-  "/",
-  verifyToken,
-  upload.array("attachments", 5),
-  async (req, res) => {
-    try {
-      const attachments = req.files.map((file) => ({
-        filename: file.originalname,
-        path: file.path,
-        mimetype: file.mimetype,
-      }));
-
-      const complaint = await Complaint.create({
-        title: req.body.title,
-        description: req.body.description,
-        user: req.user.id,
-        attachments,
-      });
-
-      res.status(201).json(complaint);
-    } catch (err) {
-      res.status(500).json({ message: "Failed to create complaint" });
-    }
-  }
-);
 
 module.exports = router;

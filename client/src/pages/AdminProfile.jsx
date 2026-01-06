@@ -1,4 +1,4 @@
-// client/src/pages/AdminProfile.jsx
+
 import React, { useContext } from "react";
 import {
   UserCog,
